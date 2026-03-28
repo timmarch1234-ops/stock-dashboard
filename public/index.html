@@ -268,7 +268,7 @@
 <header>
   <h1>ATH Tracker</h1>
   <p>Distance from all-time high</p>
-  <span id="updated">Loading…</span>
+  <span id="updated">Loading...</span>
 </header>
 
 <div class="grid" id="grid"></div>
@@ -279,21 +279,21 @@
 const LOGOS = { META:'M', GOOGL:'G', TSLA:'T', AMZN:'A' };
 
 function fmt(n, d=2) {
-  return n == null ? '—' : n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  return n == null ? '-' : n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
 function fmtVol(n) {
-  if (!n) return '—';
+  if (!n) return '-';
   if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
   if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
   return n.toLocaleString();
 }
 
 function pctColor(pct) {
-  if (pct >= 0)    return '#00e676';   // at or above ATH — green
-  if (pct >= -10)  return '#00e676';   // within 10% — green
-  if (pct >= -20)  return '#ffd740';   // 10–20% down — yellow
-  return '#ff4060';                    // >20% down — red
+  if (pct >= 0)    return '#00e676';   // at or above ATH - green
+  if (pct >= -10)  return '#00e676';   // within 10% - green
+  if (pct >= -20)  return '#ffd740';   // 10-20% down - yellow
+  return '#ff4060';                    // >20% down - red
 }
 
 function marketLabel(state) {
@@ -359,7 +359,7 @@ function buildCard(s) {
       <div class="sep"></div>
       <div class="sec-item">
         <div class="sec-label">This Week</div>
-        <div class="sec-value ${s.weekChangePct >= 0 ? 'up' : 'down'}">${s.weekChangePct != null ? (s.weekChangePct >= 0 ? '+' : '') + fmt(s.weekChangePct) + '%' : '—'}</div>
+        <div class="sec-value ${s.weekChangePct >= 0 ? 'up' : 'down'}">${s.weekChangePct != null ? (s.weekChangePct >= 0 ? '+' : '') + fmt(s.weekChangePct) + '%' : '-'}</div>
       </div>
       <div class="sep"></div>
       <div class="sec-item">
@@ -412,16 +412,6 @@ async function loadChart(ticker, ath) {
             borderColor: '#ff4060',
             backgroundColor: 'transparent',
           },
-          {
-            // ATH dashed reference
-            data: Array(prices.length).fill(ath),
-            borderWidth: 1,
-            borderDash: [5, 5],
-            borderColor: 'rgba(255,255,255,0.15)',
-            pointRadius: 0,
-            fill: false,
-            tension: 0,
-          }
         ],
       },
       options: {
