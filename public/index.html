@@ -66,30 +66,38 @@
     }
 
     #refresh-btn {
-      margin-top: 4px;
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 100;
       background: var(--card);
       border: 1px solid var(--card-border);
       color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      padding: 8px 22px;
-      border-radius: 999px;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
     }
     #refresh-btn:hover {
       background: var(--card-border);
       border-color: var(--accent);
-      color: #fff;
     }
     #refresh-btn:active {
-      transform: scale(0.97);
+      transform: scale(0.92);
     }
     #refresh-btn.spinning {
-      opacity: 0.6;
+      opacity: 0.5;
       pointer-events: none;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     .grid {
@@ -303,9 +311,8 @@
   <h1>ATH Tracker</h1>
   <p>Distance from all-time high</p>
   <span id="updated">Loading…</span>
-  <br><br>
-  <button onclick="refresh()" id="refresh-btn">↻ Refresh</button>
 </header>
+<button onclick="refresh()" id="refresh-btn" title="Refresh">↻</button>
 
 <div class="grid" id="grid"></div>
 
@@ -498,9 +505,9 @@ async function _refresh() {
 
 async function refresh() {
   const btn = document.getElementById('refresh-btn');
-  if (btn) { btn.textContent = '↻ Refreshing…'; btn.classList.add('spinning'); }
+  if (btn) btn.classList.add('spinning');
   await _refresh();
-  if (btn) { btn.textContent = '↻ Refresh'; btn.classList.remove('spinning'); }
+  if (btn) btn.classList.remove('spinning');
 }
 
 _refresh();
