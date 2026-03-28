@@ -422,9 +422,8 @@ async function loadChart(ticker, ath) {
     const labels = history.map(d => d.date);
     const prices = history.map(d => d.close);
 
-    // Only mark a segment green if both surrounding points are >= ATH
-    // This prevents tiny green blips from single-point ATH crossings
-    const isGreen = i => prices[i] >= ath && prices[i - 1] >= ath;
+    // Whole line is red if current price is below ATH, green if at/above
+    const lineColor = prices[prices.length - 1] >= ath ? '#00e676' : '#ff4060';
 
     charts[ticker] = new Chart(canvas.getContext('2d'), {
       type: 'line',
@@ -438,10 +437,7 @@ async function loadChart(ticker, ath) {
             pointHoverRadius: 4,
             fill: false,
             tension: 0.3,
-            segment: {
-              borderColor: c => isGreen(c.p1DataIndex) ? '#00e676' : '#ff4060',
-            },
-            borderColor: '#ff4060',
+            borderColor: lineColor,
             backgroundColor: 'transparent',
             borderCapStyle: 'butt',
             borderJoinStyle: 'bevel',
