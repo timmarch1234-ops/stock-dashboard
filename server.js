@@ -14,18 +14,25 @@ const ATH = {
 };
 
 async function fetchQuote(ticker) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+  // Fetch 5d range to get weekly change
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${ticker}`);
   const data = await res.json();
-  const meta = data.chart.result[0].meta;
+  const result = data.chart.result[0];
+  const meta = result.meta;
+  const closes = result.indicators.quote[0].close.filter(Boolean);
+  const weekStartPrice = closes.length >= 2 ? closes[0] : null;
+  const weekChangePct = weekStartPrice
+    ? ((meta.regularMarketPrice - weekStartPrice) / weekStartPrice) * 100
+    : null;
   return {
     price: meta.regularMarketPrice,
     high: meta.regularMarketDayHigh,
     low: meta.regularMarketDayLow,
-    volume: meta.regularMarketVolume,
     prev: meta.chartPreviousClose,
     state: meta.marketState,
+    weekChangePct: weekChangePct !== null ? +weekChangePct.toFixed(2) : null,
   };
 }
 
@@ -87,7 +94,7 @@ app.get('/api/stocks', async (req, res) => {
         changePct: +changePct.toFixed(2),
         high: q.high,
         low: q.low,
-        volume: q.volume,
+        weekChangePct: q.weekChangePct,
         marketState: q.state,
       };
     }));
