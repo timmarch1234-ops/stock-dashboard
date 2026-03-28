@@ -405,10 +405,9 @@ function fmtVol(n) {
 }
 
 function pctColor(pct) {
-  if (pct >= 0)    return '#00e676';   // at or above ATH - green
-  if (pct >= -10)  return '#00e676';   // within 10% - green
-  if (pct >= -20)  return '#ffd740';   // 10-20% down - yellow
-  return '#ff4060';                    // >20% down - red
+  if (pct >= 0)      return '#00e676';   // at or above ATH — green
+  if (pct > -29.99)  return '#ff4060';   // less than 30% down — red
+  return '#00e676';                      // 30% or more down — green
 }
 
 function marketLabel(state) {
