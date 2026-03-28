@@ -93,17 +93,11 @@
     }
 
     .grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
       max-width: 1300px;
       margin: 0 auto;
-    }
-
-    .card {
-      flex: 1 1 300px;
-      max-width: 420px;
     }
 
     /* ── CARD ── */
