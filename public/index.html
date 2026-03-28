@@ -403,12 +403,10 @@ async function loadChart(ticker, ath) {
             borderWidth: 2,
             pointRadius: 0,
             pointHoverRadius: 4,
-            fill: true,
+            fill: false,
             tension: 0.3,
             segment: {
               borderColor: c => prices[c.p1DataIndex] >= ath ? '#00e676' : '#ff4060',
-              backgroundColor: c => prices[c.p1DataIndex] >= ath
-                ? 'rgba(0,230,118,0.07)' : 'rgba(255,64,96,0.07)',
             },
             borderColor: '#ff4060',
             backgroundColor: 'transparent',
