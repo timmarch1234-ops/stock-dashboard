@@ -65,6 +65,33 @@
       padding: 4px 14px;
     }
 
+    #refresh-btn {
+      margin-top: 4px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 22px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      letter-spacing: 0.02em;
+    }
+    #refresh-btn:hover {
+      background: var(--card-border);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    #refresh-btn:active {
+      transform: scale(0.97);
+    }
+    #refresh-btn.spinning {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -269,7 +296,9 @@
 <header>
   <h1>ATH Tracker</h1>
   <p>Distance from all-time high</p>
-  <span id="updated">Loading...</span>
+  <span id="updated">Loading…</span>
+  <br><br>
+  <button onclick="refresh()" id="refresh-btn">↻ Refresh</button>
 </header>
 
 <div class="grid" id="grid"></div>
@@ -446,7 +475,7 @@ async function loadChart(ticker, ath) {
 }
 
 /* ── Main fetch ── */
-async function refresh() {
+async function _refresh() {
   try {
     const res = await fetch('/api/stocks');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -465,8 +494,15 @@ async function refresh() {
   }
 }
 
-refresh();
-setInterval(refresh, 30000);
+async function refresh() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) { btn.textContent = '↻ Refreshing…'; btn.classList.add('spinning'); }
+  await _refresh();
+  if (btn) { btn.textContent = '↻ Refresh'; btn.classList.remove('spinning'); }
+}
+
+_refresh();
+
 </script>
 </body>
 </html>
