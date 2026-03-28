@@ -1,10 +1,14 @@
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const yahooFinance = new YahooFinance({
+  suppressNotices: ['yahooSurvey', 'ripHistorical'],
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,7 +26,7 @@ let priceCache = null;
 let priceCacheTime = 0;
 const PRICE_TTL = 60 * 1000; // 60 seconds
 
-let athCache = {}; // { ticker: { ath, date } }
+let athCache = {}; // { ticker: { ath, athDate } }
 let athCacheDate = null; // YYYY-MM-DD string
 
 function todayStr() {
@@ -37,28 +41,26 @@ async function getATH(ticker, ipoDate) {
 
   console.log(`Fetching historical data for ${ticker} from ${ipoDate}...`);
   try {
-    const result = await yahooFinance.historical(ticker, {
+    const result = await yahooFinance.chart(ticker, {
       period1: ipoDate,
       period2: today,
-      interval: '1mo', // monthly for efficiency
+      interval: '1mo',
     });
 
     let ath = 0;
-    let athDate = null;
-    for (const row of result) {
+    const quotes = result?.quotes || [];
+    for (const row of quotes) {
       if (row.high && row.high > ath) {
         ath = row.high;
-        athDate = row.date;
       }
     }
 
-    athCache[ticker] = { ath, athDate };
+    athCache[ticker] = { ath };
     athCacheDate = today;
     return athCache[ticker];
   } catch (err) {
     console.error(`Error fetching historical for ${ticker}:`, err.message);
-    // Return cached if available despite date mismatch
-    return athCache[ticker] || { ath: 0, athDate: null };
+    return athCache[ticker] || { ath: 0 };
   }
 }
 
