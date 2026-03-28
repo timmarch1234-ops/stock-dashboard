@@ -21,10 +21,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const STOCKS = {
   META:  { name: 'Meta',      color: '#0082FB', ipoDate: '2012-05-18' },
   GOOGL: { name: 'Alphabet',  color: '#34A853', ipoDate: '2004-08-19' },
-  TSLA:  { name: 'Tesla',     color: '#E31937', ipoDate: '2010-06-29' },
-  AMZN:  { name: 'Amazon',    color: '#FF9900', ipoDate: '1997-05-15' },
-  MSFT:  { name: 'Microsoft', color: '#00A4EF', ipoDate: '1986-03-13' },
   NVDA:  { name: 'NVIDIA',    color: '#76B900', ipoDate: '1999-01-22' },
+  MSFT:  { name: 'Microsoft', color: '#00A4EF', ipoDate: '1986-03-13' },
+  AMZN:  { name: 'Amazon',    color: '#FF9900', ipoDate: '1997-05-15' },
+  TSLA:  { name: 'Tesla',     color: '#E31937', ipoDate: '2010-06-29' },
 };
 
 // ATH cache: recalculated once per day
