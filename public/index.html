@@ -358,6 +358,11 @@ function buildCard(s) {
       </div>
       <div class="sep"></div>
       <div class="sec-item">
+        <div class="sec-label">This Week</div>
+        <div class="sec-value ${s.weekChangePct >= 0 ? 'up' : 'down'}">${s.weekChangePct != null ? (s.weekChangePct >= 0 ? '+' : '') + fmt(s.weekChangePct) + '%' : '—'}</div>
+      </div>
+      <div class="sep"></div>
+      <div class="sec-item">
         <div class="sec-label">High</div>
         <div class="sec-value">$${fmt(s.high)}</div>
       </div>
@@ -365,11 +370,6 @@ function buildCard(s) {
       <div class="sec-item">
         <div class="sec-label">Low</div>
         <div class="sec-value">$${fmt(s.low)}</div>
-      </div>
-      <div class="sep"></div>
-      <div class="sec-item">
-        <div class="sec-label">This Week</div>
-        <div class="sec-value ${s.weekChangePct >= 0 ? 'up' : 'down'}">${s.weekChangePct != null ? (s.weekChangePct >= 0 ? '+' : '') + fmt(s.weekChangePct) + '%' : '—'}</div>
       </div>
     </div>
   </div>`;
