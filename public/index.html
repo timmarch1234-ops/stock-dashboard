@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ATH Tracker</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --card: #16161f;
+      --card-border: #222232;
+      --text: #f0f0f8;
+      --muted: #6b6b8a;
+      --green: #00e676;
+      --red: #ff4d6d;
+      --accent: #7c6bff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px 60px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #fff 30%, #7c6bff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 8px;
+      letter-spacing: 0.02em;
+    }
+
+    #updated {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 4px 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 20px 20px 0 0;
+    }
+
+    .card-glow {
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      opacity: 0.06;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .ticker-info { display: flex; align-items: center; gap: 12px; }
+
+    .ticker-logo {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 800;
+      color: #fff;
+      background: var(--accent-color);
+      opacity: 0.9;
+      letter-spacing: -0.02em;
+    }
+
+    .ticker-name { font-weight: 700; font-size: 1.05rem; }
+    .ticker-symbol { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+
+    .market-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .market-badge.open { background: rgba(0,230,118,0.12); color: var(--green); }
+    .market-badge.closed { background: rgba(255,77,109,0.12); color: var(--red); }
+    .market-badge.pre { background: rgba(124,107,255,0.12); color: var(--accent); }
+    .market-badge.post { background: rgba(255,153,0,0.12); color: #ff9900; }
+
+    .price-block { margin-bottom: 22px; }
+
+    .current-price {
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .day-change {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .day-change.up { color: var(--green); }
+    .day-change.down { color: var(--red); }
+
+    /* ATH bar */
+    .ath-section {
+      background: var(--bg2);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .ath-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .ath-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .ath-price { font-size: 0.92rem; color: var(--muted); }
+    .ath-price strong { color: var(--text); font-weight: 600; }
+
+    .pct-badge {
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+    .pct-badge.up { color: var(--green); background: rgba(0,230,118,0.1); }
+    .pct-badge.down { color: var(--red); background: rgba(255,77,109,0.1); }
+
+    .progress-track {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent-color);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-value { font-size: 0.92rem; font-weight: 600; margin-top: 3px; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--card) 25%, var(--card-border) 50%, var(--card) 75%);
+      background-size: 400% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+      height: 20px;
+    }
+    @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+    .error-msg {
+      text-align: center;
+      padding: 40px;
+      color: var(--red);
+      font-size: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 24px 14px 40px; }
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>ATH Tracker</h1>
+  <p>How far each stock is from its all-time high</p>
+  <span id="updated">Loading…</span>
+</header>
+
+<div class="grid" id="grid">
+  <!-- cards injected by JS -->
+</div>
+
+<footer>Data via Yahoo Finance · Updates every 30 seconds · ATH prices sourced from Macrotrends</footer>
+
+<script>
+const LOGOS = { META:'M', GOOGL:'G', TSLA:'T', AMZN:'A' };
+
+function fmt(n, digits=2) {
+  if (n == null) return '—';
+  return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function fmtVol(n) {
+  if (!n) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  return n.toLocaleString();
+}
+
+function marketLabel(state) {
+  if (!state) return '';
+  const s = state.toUpperCase();
+  if (s === 'REGULAR') return '<span class="market-badge open">Open</span>';
+  if (s === 'CLOSED')  return '<span class="market-badge closed">Closed</span>';
+  if (s === 'PRE')     return '<span class="market-badge pre">Pre-market</span>';
+  if (s === 'POST')    return '<span class="market-badge post">After-hours</span>';
+  return `<span class="market-badge closed">${state}</span>`;
+}
+
+function buildCard(s) {
+  const isUp = s.pctFromATH >= 0;
+  const pctClass = isUp ? 'up' : 'down';
+  const pctSign = isUp ? '+' : '';
+  // progress: how close to ATH (100% = at ATH)
+  const progress = Math.min(100, Math.max(0, (s.current / s.ath) * 100));
+  const dayUp = s.changePct >= 0;
+
+  return `
+  <div class="card" style="--accent-color: ${s.color}">
+    <div class="card-glow"></div>
+    <div class="card-header">
+      <div class="ticker-info">
+        <div class="ticker-logo">${LOGOS[s.ticker]}</div>
+        <div>
+          <div class="ticker-name">${s.name}</div>
+          <div class="ticker-symbol">${s.ticker}</div>
+        </div>
+      </div>
+      ${marketLabel(s.marketState)}
+    </div>
+
+    <div class="price-block">
+      <div class="current-price">$${fmt(s.current)}</div>
+      <div class="day-change ${dayUp ? 'up' : 'down'}">
+        ${dayUp ? '▲' : '▼'} $${Math.abs(s.change).toFixed(2)} (${dayUp ? '+' : ''}${fmt(s.changePct)}%) today
+      </div>
+    </div>
+
+    <div class="ath-section">
+      <div class="ath-label">vs All-Time High</div>
+      <div class="ath-row">
+        <div class="ath-price">ATH <strong>$${fmt(s.ath)}</strong> <span style="font-size:0.7rem">(${s.athDate})</span></div>
+        <div class="pct-badge ${pctClass}">${pctSign}${fmt(s.pctFromATH)}%</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${progress}%"></div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-label">Day Open</div>
+        <div class="stat-value">$${fmt(s.open)}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Day High</div>
+        <div class="stat-value">$${fmt(s.high)}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Day Low</div>
+        <div class="stat-value">$${fmt(s.low)}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Volume</div>
+        <div class="stat-value">${fmtVol(s.volume)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function fetchAndRender() {
+  try {
+    const res = await fetch('/api/stocks');
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = data.stocks.map(buildCard).join('');
+
+    const d = new Date(data.updatedAt);
+    document.getElementById('updated').textContent =
+      'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch (e) {
+    document.getElementById('grid').innerHTML =
+      `<div class="error-msg">⚠️ Could not load stock data.<br><small>${e.message}</small></div>`;
+  }
+}
+
+fetchAndRender();
+setInterval(fetchAndRender, 30000);
+</script>
+</body>
+</html>
