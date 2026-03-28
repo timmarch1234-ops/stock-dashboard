@@ -10,6 +10,10 @@ app.use((req, res, next) => {
   res.set('Expires', '0');
   next();
 });
+// Serve index.html directly to bypass any CDN caching
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 const ATH = {
