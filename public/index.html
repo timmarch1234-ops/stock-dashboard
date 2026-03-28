@@ -507,7 +507,9 @@ async function loadChart(ticker, ath) {
     const prices = history.map(d => d.close);
 
     // Whole line is red if current price is below ATH, green if at/above
-    const lineColor = prices[prices.length - 1] >= ath ? '#00e676' : '#ff4060';
+    const currentPrice = prices[prices.length - 1];
+    const pctFromAth = ((currentPrice - ath) / ath) * 100;
+    const lineColor = currentPrice >= ath ? '#00e676' : pctFromAth <= -29.99 ? '#00d4ff' : '#ff4060';
 
     charts[ticker] = new Chart(canvas.getContext('2d'), {
       type: 'line',
