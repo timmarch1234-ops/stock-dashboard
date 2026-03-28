@@ -6,19 +6,19 @@
   <title>ATH Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0a0f;
-      --bg2: #111118;
-      --card: #16161f;
-      --card-border: #222232;
+      --bg: #080810;
+      --bg2: #0f0f1a;
+      --card: #12121e;
+      --card-border: #1e1e30;
       --text: #f0f0f8;
-      --muted: #6b6b8a;
+      --muted: #555570;
       --green: #00e676;
-      --red: #ff4d6d;
+      --red: #ff4060;
       --accent: #7c6bff;
     }
 
@@ -27,16 +27,16 @@
       color: var(--text);
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      padding: 40px 20px 60px;
+      padding: 48px 20px 60px;
     }
 
     header {
       text-align: center;
-      margin-bottom: 52px;
+      margin-bottom: 56px;
     }
 
     header h1 {
-      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
       font-weight: 800;
       letter-spacing: -0.04em;
       background: linear-gradient(135deg, #fff 30%, #7c6bff 100%);
@@ -47,15 +47,16 @@
 
     header p {
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       margin-top: 8px;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
 
     #updated {
       display: inline-block;
       margin-top: 14px;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--muted);
       background: var(--card);
       border: 1px solid var(--card-border);
@@ -65,209 +66,198 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-      gap: 24px;
-      max-width: 1200px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1300px;
       margin: 0 auto;
     }
 
+    /* ── CARD ── */
     .card {
       background: var(--card);
       border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 28px;
+      border-radius: 24px;
+      padding: 28px 28px 24px;
       position: relative;
       overflow: hidden;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-
     .card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
     }
 
+    /* top accent bar */
     .card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: var(--accent-color);
-      border-radius: 20px 20px 0 0;
+      background: var(--stock-color);
+      border-radius: 24px 24px 0 0;
     }
 
+    /* ambient glow */
     .card-glow {
       position: absolute;
-      top: -60px; right: -60px;
-      width: 180px; height: 180px;
+      top: -80px; right: -80px;
+      width: 240px; height: 240px;
       border-radius: 50%;
-      background: var(--accent-color);
-      opacity: 0.06;
-      filter: blur(40px);
+      background: var(--pct-color);
+      opacity: 0.05;
+      filter: blur(60px);
       pointer-events: none;
+      transition: background 0.5s;
     }
 
-    .card-header {
+    /* ── TOP ROW: logo + name + badge ── */
+    .card-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .ticker-info { display: flex; align-items: center; gap: 12px; }
 
     .ticker-logo {
-      width: 42px; height: 42px;
-      border-radius: 12px;
+      width: 40px; height: 40px;
+      border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; font-weight: 800;
+      font-size: 1rem; font-weight: 800;
       color: #fff;
-      background: var(--accent-color);
-      opacity: 0.9;
-      letter-spacing: -0.02em;
+      background: var(--stock-color);
     }
 
-    .ticker-name { font-weight: 700; font-size: 1.05rem; }
-    .ticker-symbol { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .ticker-name { font-weight: 700; font-size: 1rem; line-height: 1.2; }
+    .ticker-symbol { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
 
     .market-badge {
-      font-size: 0.7rem;
+      font-size: 0.67rem;
       font-weight: 600;
       padding: 3px 10px;
       border-radius: 999px;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
     }
-    .market-badge.open { background: rgba(0,230,118,0.12); color: var(--green); }
-    .market-badge.closed { background: rgba(255,77,109,0.12); color: var(--red); }
-    .market-badge.pre { background: rgba(124,107,255,0.12); color: var(--accent); }
-    .market-badge.post { background: rgba(255,153,0,0.12); color: #ff9900; }
+    .market-badge.open   { background: rgba(0,230,118,0.12); color: var(--green); }
+    .market-badge.closed { background: rgba(255,64,96,0.12);  color: var(--red); }
+    .market-badge.pre    { background: rgba(124,107,255,0.12); color: var(--accent); }
+    .market-badge.post   { background: rgba(255,153,0,0.12);   color: #ff9900; }
 
-    .price-block { margin-bottom: 22px; }
-
-    .current-price {
-      font-size: clamp(2rem, 4vw, 2.6rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
+    /* ── HERO: % from ATH ── */
+    .hero-pct {
+      text-align: center;
+      margin: 4px 0 6px;
       line-height: 1;
     }
 
-    .day-change {
-      margin-top: 6px;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    .day-change.up { color: var(--green); }
-    .day-change.down { color: var(--red); }
-
-    /* ATH bar */
-    .ath-section {
-      background: var(--bg2);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 18px;
+    .hero-pct-number {
+      font-size: clamp(3.6rem, 8vw, 5.2rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--pct-color);
+      transition: color 0.5s;
+      display: block;
     }
 
-    .ath-label {
+    .hero-pct-label {
       font-size: 0.72rem;
       font-weight: 600;
-      color: var(--muted);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 10px;
+      color: var(--muted);
+      margin-top: 6px;
+      display: block;
     }
 
-    .ath-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      margin: 18px 0 20px;
     }
-
-    .ath-price { font-size: 0.92rem; color: var(--muted); }
-    .ath-price strong { color: var(--text); font-weight: 600; }
-
-    .pct-badge {
-      font-size: 1rem;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 8px;
-    }
-    .pct-badge.up { color: var(--green); background: rgba(0,230,118,0.1); }
-    .pct-badge.down { color: var(--red); background: rgba(255,77,109,0.1); }
 
     .progress-track {
-      height: 6px;
+      height: 5px;
       background: rgba(255,255,255,0.06);
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 4px;
     }
     .progress-fill {
       height: 100%;
       border-radius: 999px;
-      background: var(--accent-color);
-      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+      background: var(--pct-color);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1), background 0.5s;
     }
 
-    .chart-container {
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    /* ── CHART ── */
+    .chart-wrap {
       position: relative;
-      height: 120px;
+      height: 100px;
       margin-bottom: 18px;
       border-radius: 12px;
       overflow: hidden;
       background: var(--bg2);
-      padding: 10px 10px 4px;
+      padding: 8px 8px 4px;
     }
 
-    .chart-label {
-      font-size: 0.68rem;
+    /* ── SECONDARY STATS ── */
+    .secondary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .sec-item { text-align: center; }
+    .sec-label {
+      font-size: 0.63rem;
       font-weight: 600;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 6px;
+      letter-spacing: 0.07em;
+    }
+    .sec-value {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-top: 3px;
+      color: var(--text);
+    }
+    .sec-value.up   { color: var(--green); }
+    .sec-value.down { color: var(--red); }
+
+    .sep {
+      width: 1px;
+      height: 30px;
+      background: var(--card-border);
     }
 
-    .stats-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .stat {
-      background: var(--bg2);
-      border-radius: 10px;
-      padding: 10px 12px;
-    }
-    .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-    .stat-value { font-size: 0.92rem; font-weight: 600; margin-top: 3px; }
-
-    .skeleton {
-      background: linear-gradient(90deg, var(--card) 25%, var(--card-border) 50%, var(--card) 75%);
-      background-size: 400% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 8px;
-      height: 20px;
-    }
-    @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
-
+    /* ── MISC ── */
     .error-msg {
       text-align: center;
-      padding: 40px;
+      padding: 60px;
       color: var(--red);
-      font-size: 1rem;
+      grid-column: 1/-1;
     }
 
     footer {
       text-align: center;
       margin-top: 48px;
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.72rem;
     }
 
     @media (max-width: 480px) {
-      body { padding: 24px 14px 40px; }
-      .card { padding: 20px; }
+      body { padding: 28px 12px 40px; }
+      .card { padding: 22px 20px 18px; }
     }
   </style>
 </head>
@@ -275,29 +265,33 @@
 
 <header>
   <h1>ATH Tracker</h1>
-  <p>How far each stock is from its all-time high</p>
+  <p>Distance from all-time high</p>
   <span id="updated">Loading…</span>
 </header>
 
-<div class="grid" id="grid">
-  <!-- cards injected by JS -->
-</div>
+<div class="grid" id="grid"></div>
 
-<footer>Data via Yahoo Finance · Updates every 30 seconds · ATH prices sourced from Macrotrends</footer>
+<footer>Data via Yahoo Finance · Refreshes every 30s</footer>
 
 <script>
 const LOGOS = { META:'M', GOOGL:'G', TSLA:'T', AMZN:'A' };
 
-function fmt(n, digits=2) {
-  if (n == null) return '—';
-  return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+function fmt(n, d=2) {
+  return n == null ? '—' : n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
 function fmtVol(n) {
   if (!n) return '—';
-  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
   return n.toLocaleString();
+}
+
+function pctColor(pct) {
+  if (pct >= 0)    return '#00e676';   // at or above ATH — green
+  if (pct >= -10)  return '#00e676';   // within 10% — green
+  if (pct >= -20)  return '#ffd740';   // 10–20% down — yellow
+  return '#ff4060';                    // >20% down — red
 }
 
 function marketLabel(state) {
@@ -305,25 +299,25 @@ function marketLabel(state) {
   const s = state.toUpperCase();
   if (s === 'REGULAR') return '<span class="market-badge open">Open</span>';
   if (s === 'CLOSED')  return '<span class="market-badge closed">Closed</span>';
-  if (s === 'PRE')     return '<span class="market-badge pre">Pre-market</span>';
+  if (s === 'PRE')     return '<span class="market-badge pre">Pre</span>';
   if (s === 'POST')    return '<span class="market-badge post">After-hours</span>';
   return `<span class="market-badge closed">${state}</span>`;
 }
 
 function buildCard(s) {
-  const isUp = s.pctFromATH >= 0;
-  const pctClass = isUp ? 'up' : 'down';
-  const pctSign = isUp ? '+' : '';
-  // progress: how close to ATH (100% = at ATH)
+  const isUp   = s.pctFromATH >= 0;
+  const sign   = isUp ? '+' : '';
+  const pc     = pctColor(s.pctFromATH);
   const progress = Math.min(100, Math.max(0, (s.current / s.ath) * 100));
-  const dayUp = s.changePct >= 0;
+  const dayUp  = s.changePct >= 0;
 
   return `
-  <div class="card" style="--accent-color: ${s.color}">
+  <div class="card" style="--stock-color:${s.color}; --pct-color:${pc}">
     <div class="card-glow"></div>
-    <div class="card-header">
+
+    <div class="card-top">
       <div class="ticker-info">
-        <div class="ticker-logo">${LOGOS[s.ticker]}</div>
+        <div class="ticker-logo">${LOGOS[s.ticker] || s.ticker[0]}</div>
         <div>
           <div class="ticker-name">${s.name}</div>
           <div class="ticker-symbol">${s.ticker}</div>
@@ -332,177 +326,150 @@ function buildCard(s) {
       ${marketLabel(s.marketState)}
     </div>
 
-    <div class="price-block">
-      <div class="current-price">$${fmt(s.current)}</div>
-      <div class="day-change ${dayUp ? 'up' : 'down'}">
-        ${dayUp ? '▲' : '▼'} $${Math.abs(s.change).toFixed(2)} (${dayUp ? '+' : ''}${fmt(s.changePct)}%) today
-      </div>
+    <!-- HERO % -->
+    <div class="hero-pct">
+      <span class="hero-pct-number">${sign}${fmt(s.pctFromATH)}%</span>
+      <span class="hero-pct-label">from all-time high</span>
     </div>
 
-    <div class="ath-section">
-      <div class="ath-label">vs All-Time High</div>
-      <div class="ath-row">
-        <div class="ath-price">ATH <strong>$${fmt(s.ath)}</strong> <span style="font-size:0.7rem">(${s.athDate})</span></div>
-        <div class="pct-badge ${pctClass}">${pctSign}${fmt(s.pctFromATH)}%</div>
-      </div>
+    <!-- PROGRESS: current vs ATH -->
+    <div class="progress-wrap">
       <div class="progress-track">
         <div class="progress-fill" style="width:${progress}%"></div>
       </div>
+      <div class="progress-labels">
+        <span>$${fmt(s.current)} now</span>
+        <span>ATH $${fmt(s.ath)}</span>
+      </div>
     </div>
 
-    <div class="chart-label" style="font-size:0.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">1-Year Price vs ATH</div>
-    <div class="chart-container">
+    <!-- CHART -->
+    <div class="chart-wrap">
       <canvas id="chart-${s.ticker}"></canvas>
     </div>
 
-    <div class="stats-row">
-      <div class="stat">
-        <div class="stat-label">Day Open</div>
-        <div class="stat-value">$${fmt(s.open)}</div>
+    <!-- SECONDARY STATS -->
+    <div class="secondary">
+      <div class="sec-item">
+        <div class="sec-label">Today</div>
+        <div class="sec-value ${dayUp ? 'up' : 'down'}">${dayUp ? '+' : ''}${fmt(s.changePct)}%</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Day High</div>
-        <div class="stat-value">$${fmt(s.high)}</div>
+      <div class="sep"></div>
+      <div class="sec-item">
+        <div class="sec-label">High</div>
+        <div class="sec-value">$${fmt(s.high)}</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Day Low</div>
-        <div class="stat-value">$${fmt(s.low)}</div>
+      <div class="sep"></div>
+      <div class="sec-item">
+        <div class="sec-label">Low</div>
+        <div class="sec-value">$${fmt(s.low)}</div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Volume</div>
-        <div class="stat-value">${fmtVol(s.volume)}</div>
+      <div class="sep"></div>
+      <div class="sec-item">
+        <div class="sec-label">Volume</div>
+        <div class="sec-value">${fmtVol(s.volume)}</div>
       </div>
     </div>
   </div>`;
 }
 
-// Chart instances keyed by ticker
-const chartInstances = {};
-
-function buildSegmentedDataset(history, ath) {
-  // Each point: red if price < ath, green if >= ath
-  // Chart.js segment coloring based on value vs ATH line
-  const labels = history.map(d => d.date);
-  const prices = history.map(d => d.close);
-  return { labels, prices };
-}
+/* ── Charts ── */
+const charts = {};
 
 async function loadChart(ticker, ath) {
   try {
     const res = await fetch(`/api/history/${ticker}`);
     if (!res.ok) return;
-    const data = await res.json();
-    const history = data.history;
-    if (!history || history.length === 0) return;
+    const { history } = await res.json();
+    if (!history?.length) return;
+
+    const canvas = document.getElementById(`chart-${ticker}`);
+    if (!canvas) return;
+    if (charts[ticker]) charts[ticker].destroy();
 
     const labels = history.map(d => d.date);
     const prices = history.map(d => d.close);
 
-    const canvas = document.getElementById(`chart-${ticker}`);
-    if (!canvas) return;
-
-    // Destroy existing chart if re-rendering
-    if (chartInstances[ticker]) {
-      chartInstances[ticker].destroy();
-    }
-
-    const ctx = canvas.getContext('2d');
-
-    // Build per-segment colors: green if price >= ATH, red if below
-    const pointColors = prices.map(p => p >= ath ? '#00e676' : '#ff4d6d');
-
-    // Create gradient segments by building a gradient based on data
-    // We use segment plugin to color line segments individually
-    chartInstances[ticker] = new Chart(ctx, {
+    charts[ticker] = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
         labels,
-        datasets: [{
-          data: prices,
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          fill: true,
-          tension: 0.3,
-          segment: {
-            borderColor: ctx => {
-              const p = prices[ctx.p1DataIndex];
-              return p >= ath ? '#00e676' : '#ff4d6d';
+        datasets: [
+          {
+            data: prices,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.3,
+            segment: {
+              borderColor: c => prices[c.p1DataIndex] >= ath ? '#00e676' : '#ff4060',
+              backgroundColor: c => prices[c.p1DataIndex] >= ath
+                ? 'rgba(0,230,118,0.07)' : 'rgba(255,64,96,0.07)',
             },
-            backgroundColor: ctx => {
-              const p = prices[ctx.p1DataIndex];
-              return p >= ath ? 'rgba(0,230,118,0.08)' : 'rgba(255,77,109,0.08)';
-            },
+            borderColor: '#ff4060',
+            backgroundColor: 'transparent',
           },
-          borderColor: '#ff4d6d', // fallback
-          backgroundColor: 'transparent',
-        }, {
-          // ATH reference line
-          data: Array(prices.length).fill(ath),
-          borderWidth: 1,
-          borderDash: [4, 4],
-          borderColor: 'rgba(255,255,255,0.2)',
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-        }],
+          {
+            // ATH dashed reference
+            data: Array(prices.length).fill(ath),
+            borderWidth: 1,
+            borderDash: [5, 5],
+            borderColor: 'rgba(255,255,255,0.15)',
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+          }
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 600 },
+        animation: { duration: 500 },
         plugins: {
           legend: { display: false },
           tooltip: {
-            mode: 'index',
-            intersect: false,
+            mode: 'index', intersect: false,
             callbacks: {
-              label: ctx => ctx.datasetIndex === 0
-                ? ` $${ctx.parsed.y.toFixed(2)}`
+              label: c => c.datasetIndex === 0
+                ? ` $${c.parsed.y.toFixed(2)}`
                 : ` ATH $${ath}`,
             },
           },
         },
         scales: {
-          x: {
-            display: false,
-            grid: { display: false },
-          },
-          y: {
-            display: false,
-            grid: { display: false },
-          },
+          x: { display: false },
+          y: { display: false },
         },
       },
     });
-  } catch (e) {
-    console.warn('Chart load failed for', ticker, e);
+  } catch(e) {
+    console.warn('chart error', ticker, e);
   }
 }
 
-async function fetchAndRender() {
+/* ── Main fetch ── */
+async function refresh() {
   try {
     const res = await fetch('/api/stocks');
-    if (!res.ok) throw new Error('API error ' + res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
-    const grid = document.getElementById('grid');
-    grid.innerHTML = data.stocks.map(buildCard).join('');
+    document.getElementById('grid').innerHTML = data.stocks.map(buildCard).join('');
 
     const d = new Date(data.updatedAt);
     document.getElementById('updated').textContent =
-      'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      'Updated ' + d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
-    // Load charts for each stock
     data.stocks.forEach(s => loadChart(s.ticker, s.ath));
-  } catch (e) {
+  } catch(e) {
     document.getElementById('grid').innerHTML =
-      `<div class="error-msg">⚠️ Could not load stock data.<br><small>${e.message}</small></div>`;
+      `<div class="error-msg">⚠️ Failed to load data<br><small>${e.message}</small></div>`;
   }
 }
 
-fetchAndRender();
-setInterval(fetchAndRender, 30000);
+refresh();
+setInterval(refresh, 30000);
 </script>
 </body>
 </html>
