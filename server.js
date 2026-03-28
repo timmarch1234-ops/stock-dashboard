@@ -10,23 +10,55 @@ app.use((req, res, next) => {
   res.set('Expires', '0');
   next();
 });
+
 // Serve index.html directly to bypass any CDN caching
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 app.use(express.static(path.join(__dirname, 'public')));
 
-const ATH = {
-  META:  { price: 796.25, date: 'Aug 15, 2025',  name: 'Meta',      color: '#0082FB' },
-  GOOGL: { price: 349.00, date: 'Feb 3, 2026',   name: 'Alphabet',  color: '#34A853' },
-  TSLA:  { price: 498.83, date: 'Dec 22, 2025',  name: 'Tesla',     color: '#E31937' },
-  AMZN:  { price: 258.60, date: 'Nov 3, 2025',   name: 'Amazon',    color: '#FF9900' },
-  MSFT:  { price: 555.45, date: 'Jul 31, 2025',  name: 'Microsoft', color: '#00A4EF' },
-  NVDA:  { price: 212.19, date: 'Oct 29, 2025',  name: 'NVIDIA',    color: '#76B900' },
+// Stock metadata (no hardcoded ATH prices — pulled live from Yahoo Finance)
+const STOCKS = {
+  META:  { name: 'Meta',      color: '#0082FB', ipoDate: '2012-05-18' },
+  GOOGL: { name: 'Alphabet',  color: '#34A853', ipoDate: '2004-08-19' },
+  TSLA:  { name: 'Tesla',     color: '#E31937', ipoDate: '2010-06-29' },
+  AMZN:  { name: 'Amazon',    color: '#FF9900', ipoDate: '1997-05-15' },
+  MSFT:  { name: 'Microsoft', color: '#00A4EF', ipoDate: '1986-03-13' },
+  NVDA:  { name: 'NVIDIA',    color: '#76B900', ipoDate: '1999-01-22' },
 };
 
+// ATH cache: recalculated once per day
+const athCache = {};
+
+async function fetchATH(ticker) {
+  const cached = athCache[ticker];
+  if (cached && Date.now() - cached.fetchedAt < 24 * 60 * 60 * 1000) return cached;
+
+  const ipoDate = STOCKS[ticker].ipoDate;
+  const period1 = Math.floor(new Date(ipoDate).getTime() / 1000);
+  const period2 = Math.floor(Date.now() / 1000);
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&period1=${period1}&period2=${period2}`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status} fetching ATH for ${ticker}`);
+  const json = await res.json();
+  const result = json.chart.result[0];
+  const highs = result.indicators.quote[0].high;
+  const timestamps = result.timestamp;
+
+  let athPrice = 0, athDate = '';
+  highs.forEach((h, i) => {
+    if (h && h > athPrice) {
+      athPrice = h;
+      athDate = new Date(timestamps[i] * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  });
+
+  const data = { price: +athPrice.toFixed(2), date: athDate, fetchedAt: Date.now() };
+  athCache[ticker] = data;
+  return data;
+}
+
 async function fetchQuote(ticker) {
-  // Fetch 5d range to get weekly change
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${ticker}`);
@@ -48,14 +80,14 @@ async function fetchQuote(ticker) {
   };
 }
 
-// History cache: { ticker: { data, fetchedAt } }
+// History cache: refreshed hourly
 const historyCache = {};
 
-async function fetchHistory(ticker, range = '1y') {
+async function fetchHistory(ticker) {
   const cached = historyCache[ticker];
-  if (cached && Date.now() - cached.fetchedAt < 60 * 60 * 1000) return cached.data; // 1hr cache
+  if (cached && Date.now() - cached.fetchedAt < 60 * 60 * 1000) return cached.data;
 
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=${range}`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${ticker} history`);
   const json = await res.json();
@@ -74,10 +106,10 @@ async function fetchHistory(ticker, range = '1y') {
 
 app.get('/api/history/:ticker', async (req, res) => {
   const ticker = req.params.ticker.toUpperCase();
-  if (!ATH[ticker]) return res.status(404).json({ error: 'Unknown ticker' });
+  if (!STOCKS[ticker]) return res.status(404).json({ error: 'Unknown ticker' });
   try {
-    const data = await fetchHistory(ticker);
-    res.json({ ticker, ath: ATH[ticker].price, history: data });
+    const [data, ath] = await Promise.all([fetchHistory(ticker), fetchATH(ticker)]);
+    res.json({ ticker, ath: ath.price, history: data });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -86,21 +118,20 @@ app.get('/api/history/:ticker', async (req, res) => {
 
 app.get('/api/stocks', async (req, res) => {
   try {
-    const tickers = Object.keys(ATH);
+    const tickers = Object.keys(STOCKS);
     const results = await Promise.all(tickers.map(async (ticker) => {
-      const q = await fetchQuote(ticker);
+      const [q, ath] = await Promise.all([fetchQuote(ticker), fetchATH(ticker)]);
       const current = q.price;
-      const ath = ATH[ticker].price;
-      const pctFromATH = ((current - ath) / ath) * 100;
+      const pctFromATH = ((current - ath.price) / ath.price) * 100;
       const change = current - q.prev;
       const changePct = (change / q.prev) * 100;
       return {
         ticker,
-        name: ATH[ticker].name,
-        color: ATH[ticker].color,
+        name: STOCKS[ticker].name,
+        color: STOCKS[ticker].color,
         current,
-        ath,
-        athDate: ATH[ticker].date,
+        ath: ath.price,
+        athDate: ath.date,
         pctFromATH: +pctFromATH.toFixed(2),
         change: +change.toFixed(2),
         changePct: +changePct.toFixed(2),
