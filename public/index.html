@@ -148,26 +148,28 @@
     /* ── HERO: % from ATH ── */
     .hero-pct {
       text-align: center;
-      margin: 4px 0 6px;
+      margin: 8px 0 8px;
       line-height: 1;
     }
 
     .hero-pct-number {
-      font-size: clamp(3.6rem, 8vw, 5.2rem);
+      font-size: clamp(2.4rem, 5vw, 3.2rem);
       font-weight: 900;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.03em;
       color: var(--pct-color);
       transition: color 0.5s;
       display: block;
+      white-space: nowrap;
+      overflow: visible;
     }
 
     .hero-pct-label {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-top: 6px;
+      margin-top: 5px;
       display: block;
     }
 
