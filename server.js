@@ -17,10 +17,12 @@ app.get('/', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 const ATH = {
-  META:  { price: 788.15, date: 'Aug 12, 2025',  name: 'Meta',   color: '#0082FB' },
-  GOOGL: { price: 343.45, date: 'Feb 2, 2026',   name: 'Google', color: '#34A853' },
-  TSLA:  { price: 489.88, date: 'Dec 16, 2025',  name: 'Tesla',  color: '#E31937' },
-  AMZN:  { price: 254.00, date: 'Nov 3, 2025',   name: 'Amazon', color: '#FF9900' },
+  META:  { price: 788.15, date: 'Aug 12, 2025',  name: 'Meta',      color: '#0082FB' },
+  GOOGL: { price: 343.45, date: 'Feb 2, 2026',   name: 'Alphabet',  color: '#34A853' },
+  TSLA:  { price: 489.88, date: 'Dec 16, 2025',  name: 'Tesla',     color: '#E31937' },
+  AMZN:  { price: 254.00, date: 'Nov 3, 2025',   name: 'Amazon',    color: '#FF9900' },
+  MSFT:  { price: 468.35, date: 'Jul 5, 2024',   name: 'Microsoft', color: '#00A4EF' },
+  NVDA:  { price: 153.13, date: 'Jan 7, 2025',   name: 'NVIDIA',    color: '#76B900' },
 };
 
 async function fetchQuote(ticker) {
