@@ -330,10 +330,52 @@
       body { padding: 28px 12px 40px; }
       .card { padding: 22px 20px 18px; }
     }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loader-ring {
+      width: 56px;
+      height: 56px;
+      border: 3px solid var(--card-border);
+      border-top-color: #ff4060;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    .loader-label {
+      margin-top: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #main { opacity: 0; transition: opacity 0.5s ease; }
+    #main.visible { opacity: 1; }
   </style>
 </head>
 <body>
 
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-label">Loading…</div>
+</div>
+
+<div id="main">
 <header>
   <h1>ATH Tracker</h1>
   <p>Distance from all-time high</p>
@@ -346,6 +388,7 @@
 <div class="grid" id="grid"></div>
 
 <footer>Data via Yahoo Finance · All values in USD</footer>
+</div><!-- #main -->
 
 <script>
 const LOGOS = { META:'M', GOOGL:'G', TSLA:'T', AMZN:'A', MSFT:'M', NVDA:'N' };
@@ -513,7 +556,7 @@ async function loadChart(ticker, ath) {
 }
 
 /* ── Main fetch ── */
-async function _refresh() {
+async function _refresh(isFirstLoad = false) {
   try {
     const res = await fetch('/api/stocks');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -525,10 +568,23 @@ async function _refresh() {
     document.getElementById('updated').textContent =
       'Updated ' + d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
-    data.stocks.forEach(s => loadChart(s.ticker, s.ath));
+    await Promise.all(data.stocks.map(s => loadChart(s.ticker, s.ath)));
+
+    if (isFirstLoad) {
+      // Reveal page, hide loader
+      const loader = document.getElementById('loader');
+      const main = document.getElementById('main');
+      loader.classList.add('hidden');
+      main.classList.add('visible');
+      setTimeout(() => loader.remove(), 600);
+    }
   } catch(e) {
     document.getElementById('grid').innerHTML =
       `<div class="error-msg">⚠️ Failed to load data<br><small>${e.message}</small></div>`;
+    if (isFirstLoad) {
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('main').classList.add('visible');
+    }
   }
 }
 
@@ -551,11 +607,11 @@ document.addEventListener('fullscreenchange', () => {
 async function refresh() {
   const btn = document.getElementById('refresh-btn');
   if (btn) btn.classList.add('spinning');
-  await _refresh();
+  await _refresh(false);
   if (btn) btn.classList.remove('spinning');
 }
 
-_refresh();
+_refresh(true);
 
 </script>
 </body>
