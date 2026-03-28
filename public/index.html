@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ATH Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -208,6 +209,25 @@
       transition: width 1s cubic-bezier(0.4,0,0.2,1);
     }
 
+    .chart-container {
+      position: relative;
+      height: 120px;
+      margin-bottom: 18px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg2);
+      padding: 10px 10px 4px;
+    }
+
+    .chart-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
     .stats-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -330,6 +350,11 @@ function buildCard(s) {
       </div>
     </div>
 
+    <div class="chart-label" style="font-size:0.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">1-Year Price vs ATH</div>
+    <div class="chart-container">
+      <canvas id="chart-${s.ticker}"></canvas>
+    </div>
+
     <div class="stats-row">
       <div class="stat">
         <div class="stat-label">Day Open</div>
@@ -351,6 +376,110 @@ function buildCard(s) {
   </div>`;
 }
 
+// Chart instances keyed by ticker
+const chartInstances = {};
+
+function buildSegmentedDataset(history, ath) {
+  // Each point: red if price < ath, green if >= ath
+  // Chart.js segment coloring based on value vs ATH line
+  const labels = history.map(d => d.date);
+  const prices = history.map(d => d.close);
+  return { labels, prices };
+}
+
+async function loadChart(ticker, ath) {
+  try {
+    const res = await fetch(`/api/history/${ticker}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const history = data.history;
+    if (!history || history.length === 0) return;
+
+    const labels = history.map(d => d.date);
+    const prices = history.map(d => d.close);
+
+    const canvas = document.getElementById(`chart-${ticker}`);
+    if (!canvas) return;
+
+    // Destroy existing chart if re-rendering
+    if (chartInstances[ticker]) {
+      chartInstances[ticker].destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Build per-segment colors: green if price >= ATH, red if below
+    const pointColors = prices.map(p => p >= ath ? '#00e676' : '#ff4d6d');
+
+    // Create gradient segments by building a gradient based on data
+    // We use segment plugin to color line segments individually
+    chartInstances[ticker] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: prices,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: true,
+          tension: 0.3,
+          segment: {
+            borderColor: ctx => {
+              const p = prices[ctx.p1DataIndex];
+              return p >= ath ? '#00e676' : '#ff4d6d';
+            },
+            backgroundColor: ctx => {
+              const p = prices[ctx.p1DataIndex];
+              return p >= ath ? 'rgba(0,230,118,0.08)' : 'rgba(255,77,109,0.08)';
+            },
+          },
+          borderColor: '#ff4d6d', // fallback
+          backgroundColor: 'transparent',
+        }, {
+          // ATH reference line
+          data: Array(prices.length).fill(ath),
+          borderWidth: 1,
+          borderDash: [4, 4],
+          borderColor: 'rgba(255,255,255,0.2)',
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: ctx => ctx.datasetIndex === 0
+                ? ` $${ctx.parsed.y.toFixed(2)}`
+                : ` ATH $${ath}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            display: false,
+            grid: { display: false },
+          },
+          y: {
+            display: false,
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  } catch (e) {
+    console.warn('Chart load failed for', ticker, e);
+  }
+}
+
 async function fetchAndRender() {
   try {
     const res = await fetch('/api/stocks');
@@ -363,6 +492,9 @@ async function fetchAndRender() {
     const d = new Date(data.updatedAt);
     document.getElementById('updated').textContent =
       'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    // Load charts for each stock
+    data.stocks.forEach(s => loadChart(s.ticker, s.ath));
   } catch (e) {
     document.getElementById('grid').innerHTML =
       `<div class="error-msg">⚠️ Could not load stock data.<br><small>${e.message}</small></div>`;

@@ -29,6 +29,42 @@ async function fetchQuote(ticker) {
   };
 }
 
+// History cache: { ticker: { data, fetchedAt } }
+const historyCache = {};
+
+async function fetchHistory(ticker, range = '1y') {
+  const cached = historyCache[ticker];
+  if (cached && Date.now() - cached.fetchedAt < 60 * 60 * 1000) return cached.data; // 1hr cache
+
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=${range}`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${ticker} history`);
+  const json = await res.json();
+  const result = json.chart.result[0];
+  const timestamps = result.timestamp;
+  const closes = result.indicators.quote[0].close;
+
+  const data = timestamps.map((ts, i) => ({
+    date: new Date(ts * 1000).toISOString().slice(0, 10),
+    close: closes[i] ? +closes[i].toFixed(2) : null,
+  })).filter(d => d.close !== null);
+
+  historyCache[ticker] = { data, fetchedAt: Date.now() };
+  return data;
+}
+
+app.get('/api/history/:ticker', async (req, res) => {
+  const ticker = req.params.ticker.toUpperCase();
+  if (!ATH[ticker]) return res.status(404).json({ error: 'Unknown ticker' });
+  try {
+    const data = await fetchHistory(ticker);
+    res.json({ ticker, ath: ATH[ticker].price, history: data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/stocks', async (req, res) => {
   try {
     const tickers = Object.keys(ATH);
